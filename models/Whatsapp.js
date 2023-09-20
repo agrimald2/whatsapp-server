@@ -33,7 +33,7 @@ class Whatsapp {
 
         this.client = new Client({
             authStrategy: new LocalAuth({ clientId }),
-            qrMaxRetries: 2,
+            qrMaxRetries: 5,
             puppeteer: { args: puppeteerArgs },
             takeoverOnConflict: true
         });
@@ -41,13 +41,11 @@ class Whatsapp {
         this.client.on('qr', this.handleQrUpdate.bind(this, clientId));
         this.client.on('ready', this.handleReady.bind(this, clientId));
         this.client.on('disconnected', (reason) => {
+            // send DISCONNECTED state
             console.log('Client was logged out', reason);
         })
-        this.client.on('change_state', (state) => {
-            console.log('Cambio de estado: ', state);
-        })
         this.client.on('auth_failure', (message) => {
-            console.log('Reintento de Autenticación Falló', message);
+            console.log('Intento de Autenticación Falló', message);
         })
         this.client.on('message', this.handleMessageReceived.bind(this));
     }
@@ -56,11 +54,14 @@ class Whatsapp {
     }
 
     handleQrUpdate(qr, clientId) {
+        // send username and qr_code in base64
+            // username -> phone_number
         const data = { code: clientId, phone_number: qr };
         console.dir(data);
         printQROnConsole(data.code);
     }
     handleReady(clientId) {
+        // send instance Ready
         this.client.off('ready', this.handleReady.bind(this, clientId));
         this.client.off('qr', this.handleQrUpdate.bind(this, clientId));
         console.log('Instancia Activa: ' + clientId);
